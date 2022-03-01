@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly BUILD_DIR=$1
+readonly SOURCE_MAPS_PATH_FILE=".source-maps-uploader"
+
+if [[ ! -f "${BUILD_DIR}/${SOURCE_MAPS_PATH_FILE}" ]]; then
+  echo "-----> The ${SOURCE_MAPS_PATH_FILE} file was not found. Please add it with the path where the source maps are."
+  exit 1
+fi
+
+readonly SOURCE_MAPS_PATH=$(cat ${BUILD_DIR}/${SOURCE_MAPS_PATH_FILE})
+
+if [[ -z "${SOURCE_MAPS_PATH}" ]]; then
+  echo "-----> The ${SOURCE_MAPS_PATH_FILE} file is empty. Please add to it the path where the source maps are."
+  exit 1
+fi
+
+if [[ ! -d "${BUILD_DIR}/${SOURCE_MAPS_PATH}" ]]; then
+  echo "-----> The path '${SOURCE_MAPS_PATH}' defined in the ${SOURCE_MAPS_PATH_FILE} file does not exist or is not a directory."
+  exit 1
+fi
+
+echo "Source maps uploader"
+exit 0
