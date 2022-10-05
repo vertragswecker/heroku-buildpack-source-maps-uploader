@@ -1,6 +1,6 @@
 # Source maps uploader
 
-This is a tiny build pack to run after the javascript assets are compiled, and source maps are generated to [upload it to Rollbar](https://docs.rollbar.com/docs/source-maps#3-upload-your-source-map-files), so we can have the source maps available before the first error occurrence.
+This is a tiny build pack to run after the javascript assets are compiled, and source maps are generated to [upload it to Rollbar](https://docs.rollbar.com/docs/source-maps#3-upload-your-source-map-files) and upload it to Sentry, so we can have the source maps available before the first error occurrence.
 
 ## Usage
 
@@ -14,22 +14,24 @@ After that, you need [activate the dyno metadata](https://devcenter.heroku.com/a
 
 Next, add a `ROLLBAR_POST_SERVER_TOKEN` environment variable to your app with your `post_server_item` Rollbar token found in your project access tokens settings page found here: Settings → Project Access Tokens (`https://rollbar.com/volders/<the-project-name>/settings/access_tokens`.
 
+The same way, add a `SENTRY_AUTH_TOKEN` environment variable to your app with your Sentry token found in the [Auth Tokens settings page](https://sentry.io/settings/account/api/auth-tokens/), which must have the `project:read`, `project:releases`, and `org:read` scopes. Other than that, you also need to add the `SENTRY_ORG` and `SENTRY_PROJECT` environment variables with the slugs for the organization and project on Sentry, which you can get from the project URL, like https://sentry.io/organizations/{SENTRY_ORG}/projects/{SENTRY_PROJECT}.
+
 Also, add an `APP_DOMAIN` environment variable with the application domain.
 
 Then, add a `.source-maps-uploader` file in the root of your repository with the path to where the source maps are. For example:
 
 ```
-public/packs/js
+app/assets/builds
 ```
 
 In the next deployment, you should see the uploaded files in the build log:
 
 ```
 ...
------> Uploading source maps...
+-----> Uploading source to Rollbar maps...
        Uploading file public/packs/js/application-ef490583af6aebb9bf03.js.map
        Uploading file public/packs/js/other-bc62c70ba43856d88229.js.map
-       Source maps uploading completed
+       Source maps uploading to Rollbar  completed
 ...
 ```
 

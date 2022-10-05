@@ -4,27 +4,33 @@ set -euo pipefail
 
 readonly BUILD_DIR=$1
 readonly ENV_DIR=$3
+
+for var in APP_DOMAIN ROLLBAR_POST_SERVER_TOKEN SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT; do
+  if [[ ! -f "${ENV_DIR}/${var}" ]]; then
+    echo "-----> The ${var} variable is not defined. Please add to it."
+    echo "       Source maps NOT uploaded"
+    exit 1
+  fi
+done
+
 readonly SOURCE_MAPS_PATH_FILE=".source-maps-uploader"
 readonly ROLLBAR_POST_SERVER_TOKEN=$(cat ${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN)
 readonly APP_DOMAIN=$(cat ${ENV_DIR}/APP_DOMAIN)
+readonly SENTRY_ORG=$(cat ${ENV_DIR}/SENTRY_ORG)
+readonly SENTRY_PROJECT=$(cat ${ENV_DIR}/SENTRY_PROJECT)
 
-if [[ ! -f "${ENV_DIR}/APP_DOMAIN" ]]; then
-  echo "-----> The APP_DOMAIN variable is not defined. Please add to it."
-  echo "       Source maps NOT uploaded"
-  exit 1
-fi
-
-if [[ ! -f "${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN" ]]; then
-  echo "-----> The ROLLBAR_POST_SERVER_TOKEN variable is not defined. Please add to it."
-  echo "       Source maps NOT uploaded"
-  exit 1
-fi
+export SENTRY_AUTH_TOKEN=$(cat ${ENV_DIR}/SENTRY_AUTH_TOKEN)
 
 cd ${BUILD_DIR}
 
 readonly SOURCE_MAPS_PATH=$(cat ${SOURCE_MAPS_PATH_FILE})
 
-echo "-----> Uploading source maps..."
+echo "-----> Installing Sentry CLI..."
+
+curl -L -o sentry-cli https://github.com/getsentry/sentry-cli/releases/download/2.7.0/sentry-cli-Linux-x86_64
+chmod +x sentry-cli
+
+echo "-----> Uploading source maps to Rollbar..."
 
 for source_map in $(ls $SOURCE_MAPS_PATH/*.map); do
   echo "       Uploading file ${source_map}"
@@ -36,4 +42,12 @@ for source_map in $(ls $SOURCE_MAPS_PATH/*.map); do
     -F source_map=@${source_map}
 done
 
-echo "       Source maps uploading completed"
+echo "       Source maps uploading to Rollbar completed"
+
+echo "-----> Uploading source maps to Sentry..."
+
+./sentry-cli releases new -o ${SENTRY_ORG} -p ${SENTRY_PROJECT} ${SOURCE_VERSION}
+./sentry-cli releases files -o ${SENTRY_ORG} -p ${SENTRY_PROJECT} ${SOURCE_VERSION} upload-sourcemaps $SOURCE_MAPS_PATH
+./sentry-cli releases finalize -o ${SENTRY_ORG} -p ${SENTRY_PROJECT} ${SOURCE_VERSION}
+
+echo "       Source maps uploading to Sentry completed"
