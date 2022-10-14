@@ -6,18 +6,18 @@ readonly BUILD_DIR=$1
 readonly ENV_DIR=$3
 readonly SOURCE_MAPS_PATH_FILE=".source-maps-uploader"
 readonly ROLLBAR_POST_SERVER_TOKEN=$(cat ${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN)
-readonly APP_DOMAIN=$(cat ${ENV_DIR}/APP_DOMAIN)
-
-if [[ ! -f "${ENV_DIR}/APP_DOMAIN" ]]; then
-  echo "-----> The APP_DOMAIN variable is not defined. Please add to it."
-  echo "       Source maps NOT uploaded"
-  exit 1
-fi
 
 if [[ ! -f "${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN" ]]; then
   echo "-----> The ROLLBAR_POST_SERVER_TOKEN variable is not defined. Please add to it."
   echo "       Source maps NOT uploaded"
   exit 1
+fi
+
+if [[ -f "${ENV_DIR}/APP_DOMAIN}" ]]; then
+  readonly DOMAIN=$(cat ${ENV_DIR}/APP_DOMAIN)
+else
+  readonly DOMAIN="herokuapp.com"
+  echo "-----> WARNING! The APP_DOMAIN variable is not defined. So we are using herokuapp.com instead."
 fi
 
 cd ${BUILD_DIR}
@@ -32,7 +32,7 @@ for source_map in $(ls $SOURCE_MAPS_PATH/*.map); do
   curl --silent --output /dev/null --show-error --fail https://api.rollbar.com/api/1/sourcemap \
     -F access_token=${ROLLBAR_POST_SERVER_TOKEN} \
     -F version=${SOURCE_VERSION} \
-    -F minified_url=//${APP_DOMAIN}/${source_map%.map} \
+    -F minified_url=//${DOMAIN}/${source_map%.map} \
     -F source_map=@${source_map}
 done
 
