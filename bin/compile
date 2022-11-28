@@ -4,21 +4,18 @@ set -euo pipefail
 
 readonly BUILD_DIR=$1
 readonly ENV_DIR=$3
+
+for var in ROLLBAR_POST_SERVER_TOKEN SOURCE_MAPS_DOMAIN; do
+  if [[ ! -f "${ENV_DIR}/${var}" ]]; then
+    echo "-----> The ${var} variable is not defined. Please do it."
+    echo "       Source maps NOT uploaded"
+    exit 1
+  fi
+done
+
 readonly SOURCE_MAPS_PATH_FILE=".source-maps-uploader"
 readonly ROLLBAR_POST_SERVER_TOKEN=$(cat ${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN)
-
-if [[ ! -f "${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN" ]]; then
-  echo "-----> The ROLLBAR_POST_SERVER_TOKEN variable is not defined. Please add to it."
-  echo "       Source maps NOT uploaded"
-  exit 1
-fi
-
-if [[ -f "${ENV_DIR}/SOURCE_MAPS_DOMAIN}" ]]; then
-  readonly DOMAIN=$(cat ${ENV_DIR}/SOURCE_MAPS_DOMAIN)
-else
-  readonly DOMAIN="herokuapp.com"
-  echo "-----> WARNING! The SOURCE_MAPS_DOMAIN variable is not defined. So we are using herokuapp.com instead."
-fi
+readonly DOMAIN=$(cat ${ENV_DIR}/SOURCE_MAPS_DOMAIN)
 
 cd ${BUILD_DIR}
 
