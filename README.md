@@ -14,7 +14,7 @@ After that, you need [activate the dyno metadata](https://devcenter.heroku.com/a
 
 Next, add a `ROLLBAR_POST_SERVER_TOKEN` environment variable to your app with your `post_server_item` Rollbar token found in your project access tokens settings page found here: Settings → Project Access Tokens (`https://rollbar.com/volders/<the-project-name>/settings/access_tokens`.
 
-Also, add an `APP_DOMAIN` environment variable with the application domain.
+Also, add an `SOURCE_MAPS_DOMAIN` environment variable with the application domain.
 
 Then, add a `.source-maps-uploader` file in the root of your repository with the path to where the source maps are. For example:
 
@@ -35,7 +35,7 @@ In the next deployment, you should see the uploaded files in the build log:
 
 And on the Rollbar source maps page from the project: `https://rollbar.com/volders/<the-project-name>/settings/source_map`.
 
-**Note**: This build pack does not work out of the box for the review apps because we can't activate the dyno metadata using the `app.json`. To use it in a review app, you must manually activate the dyno metadata and set the `APP_DOMAIN` to the correct review app address.
+**Note**: This build pack does not work out of the box for the review apps because we can't activate the dyno metadata using the `app.json`. To use it in a review app, you must manually activate the dyno metadata and set the `SOURCE_MAPS_DOMAIN` to the correct review app address.
 
 ## License
 

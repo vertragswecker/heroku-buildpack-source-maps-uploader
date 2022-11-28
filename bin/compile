@@ -13,11 +13,11 @@ if [[ ! -f "${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN" ]]; then
   exit 1
 fi
 
-if [[ -f "${ENV_DIR}/APP_DOMAIN}" ]]; then
-  readonly DOMAIN=$(cat ${ENV_DIR}/APP_DOMAIN)
+if [[ -f "${ENV_DIR}/SOURCE_MAPS_DOMAIN}" ]]; then
+  readonly DOMAIN=$(cat ${ENV_DIR}/SOURCE_MAPS_DOMAIN)
 else
   readonly DOMAIN="herokuapp.com"
-  echo "-----> WARNING! The APP_DOMAIN variable is not defined. So we are using herokuapp.com instead."
+  echo "-----> WARNING! The SOURCE_MAPS_DOMAIN variable is not defined. So we are using herokuapp.com instead."
 fi
 
 cd ${BUILD_DIR}
