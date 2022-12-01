@@ -12,14 +12,15 @@ heroku buildpacks:add volders/source-maps-uploader
 
 After that, you need [activate the dyno metadata](https://devcenter.heroku.com/articles/dyno-metadata) for your app. During the build [we have](https://devcenter.heroku.com/articles/buildpack-api#bin-compile-summary) the `SOURCE_VERSION` env variable. However, we need the `HEROKU_SLUG_COMMIT` when the application is running to [set the `code_version` option](https://docs.rollbar.com/docs/source-maps#2-configure-the-rollbarjs-sdk-to-support-source-maps).
 
-Next, add a `ROLLBAR_POST_SERVER_TOKEN` environment variable to your app with your `post_server_item` Rollbar token found in your project access tokens settings page found here: Settings → Project Access Tokens (`https://rollbar.com/volders/<the-project-name>/settings/access_tokens`.
+Next, add the following environment variables to your app:
 
-Also, add an `APP_DOMAIN` environment variable with the application domain.
+- `ROLLBAR_POST_SERVER_TOKEN`: your `post_server_item` Rollbar token found in your project access tokens settings page found here: Settings → Project Access Tokens (`https://rollbar.com/volders/<the-project-name>/settings/access_tokens`.
+- `SOURCE_MAPS_BASE_URL`: the application base URL where the assets are served. For example `my-url.com/assets`.
 
 Then, add a `.source-maps-uploader` file in the root of your repository with the path to where the source maps are. For example:
 
 ```
-public/packs/js
+public/assets
 ```
 
 In the next deployment, you should see the uploaded files in the build log:
@@ -27,15 +28,15 @@ In the next deployment, you should see the uploaded files in the build log:
 ```
 ...
 -----> Uploading source maps...
-       Uploading file public/packs/js/application-ef490583af6aebb9bf03.js.map
-       Uploading file public/packs/js/other-bc62c70ba43856d88229.js.map
+       Uploading file public/assets/application-ef490583af6aebb9bf03.js.map
+       Uploading file public/assets/other-bc62c70ba43856d88229.js.map
        Source maps uploading completed
 ...
 ```
 
 And on the Rollbar source maps page from the project: `https://rollbar.com/volders/<the-project-name>/settings/source_map`.
 
-**Note**: This build pack does not work out of the box for the review apps because we can't activate the dyno metadata using the `app.json`. To use it in a review app, you must manually activate the dyno metadata and set the `APP_DOMAIN` to the correct review app address.
+**Note**: This build pack does not work out of the box for the review apps because we can't activate the dyno metadata using the `app.json`. To use it in a review app, you must manually activate the dyno metadata and set the `SOURCE_MAPS_BASE_URL` to the correct review app address.
 
 ## License
 

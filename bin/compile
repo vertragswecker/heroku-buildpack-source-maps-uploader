@@ -4,36 +4,41 @@ set -euo pipefail
 
 readonly BUILD_DIR=$1
 readonly ENV_DIR=$3
-readonly SOURCE_MAPS_PATH_FILE=".source-maps-uploader"
+
+for var in ROLLBAR_POST_SERVER_TOKEN SOURCE_MAPS_BASE_URL; do
+  if [[ ! -f "${ENV_DIR}/${var}" ]]; then
+    echo "-----> The ${var} variable is not defined. Please do it."
+    echo "       Source maps NOT uploaded"
+    exit 1
+  fi
+done
+
+readonly SOURCE_MAPS_PATH_CONFIG_FILE=".source-maps-uploader"
 readonly ROLLBAR_POST_SERVER_TOKEN=$(cat ${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN)
-
-if [[ ! -f "${ENV_DIR}/ROLLBAR_POST_SERVER_TOKEN" ]]; then
-  echo "-----> The ROLLBAR_POST_SERVER_TOKEN variable is not defined. Please add to it."
-  echo "       Source maps NOT uploaded"
-  exit 1
-fi
-
-if [[ -f "${ENV_DIR}/APP_DOMAIN}" ]]; then
-  readonly DOMAIN=$(cat ${ENV_DIR}/APP_DOMAIN)
-else
-  readonly DOMAIN="herokuapp.com"
-  echo "-----> WARNING! The APP_DOMAIN variable is not defined. So we are using herokuapp.com instead."
-fi
+readonly BASE_URL=$(cat ${ENV_DIR}/SOURCE_MAPS_BASE_URL)
 
 cd ${BUILD_DIR}
 
-readonly SOURCE_MAPS_PATH=$(cat ${SOURCE_MAPS_PATH_FILE})
+readonly SOURCE_MAPS_DIRECTORY=$(cat ${SOURCE_MAPS_PATH_CONFIG_FILE})
 
 echo "-----> Uploading source maps..."
 
-for source_map in $(ls $SOURCE_MAPS_PATH/*.map); do
-  echo "       Uploading file ${source_map}"
+for source_map_full_path in $(ls $SOURCE_MAPS_DIRECTORY/*.js*.map); do
+  # For example, next line returns something like application.js-953b9963fa86c1e67de0cba30d95743859144257.map
+  source_map_file_name=$(basename ${source_map_full_path})
+  # For example, next line returns something like application.js
+  raw_minified_file_name="${source_map_file_name%-*.map}"
+  # For example, next line returns something like application-*.js
+  fingerprinted_minified_file_pattern="${raw_minified_file_name/./-\*.}"
+  # For example, next line returns something like application-b3f9be8b847d3f361d42e108ccf1d53633e4db93.js
+  newest_compiled_file=$(ls -t ${SOURCE_MAPS_DIRECTORY}/${fingerprinted_minified_file_pattern} | head -n 1 | xargs basename)
 
+  echo "       Uploading file ${source_map_full_path}"
   curl --silent --output /dev/null --show-error --fail https://api.rollbar.com/api/1/sourcemap \
     -F access_token=${ROLLBAR_POST_SERVER_TOKEN} \
     -F version=${SOURCE_VERSION} \
-    -F minified_url=//${DOMAIN}/${source_map%.map} \
-    -F source_map=@${source_map}
+    -F minified_url=//${BASE_URL}/${newest_compiled_file} \
+    -F source_map=@${source_map_full_path}
 done
 
 echo "       Source maps uploading completed"
