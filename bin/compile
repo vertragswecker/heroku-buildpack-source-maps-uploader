@@ -24,6 +24,11 @@ readonly SOURCE_MAPS_DIRECTORY=$(cat ${SOURCE_MAPS_PATH_CONFIG_FILE})
 echo "-----> Uploading source maps..."
 
 for source_map_full_path in $(ls $SOURCE_MAPS_DIRECTORY/*.js*.map); do
+  source_map_file_pattern="${source_map_full_path%-*.map}-*.map"
+  newest_map_file=$(ls -t ${source_map_file_pattern} | head -n 1)
+
+  [[ $source_map_full_path != $newest_map_file ]] && continue
+
   # For example, next line returns something like application.js-953b9963fa86c1e67de0cba30d95743859144257.map
   source_map_file_name=$(basename ${source_map_full_path})
   # For example, next line returns something like application.js
